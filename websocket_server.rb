@@ -2,11 +2,13 @@ require 'socket'
 require 'digest/sha1'
 require 'base64'
 
+require_relative 'websocket_connection'
+
 class WebSocketServer
 
   WS_MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
-  def initialize(options={path: '/', port: 4568, host: 'localhost'})
+  def initialize(options={path: '/', host: 'localhost', port: 4568})
     @path, host, port = options[:path], options[:host], options[:port]
     @tcp_server = TCPServer.new(host, port)
   end
@@ -30,7 +32,7 @@ class WebSocketServer
     false # reject the handshake - do not create WebSocketConnection instance (in #accept)
   end
 
-  def get_header(socket, header = '') # 'rn' is EOF - return header
+  def get_header(socket, header = "") # 'rn' is EOF - return header
     (line = socket.gets) == "\r\n" ? header : get_header(socket, header + line) # recursively adds a line offered by the socket - nice
   end
 
@@ -49,12 +51,10 @@ class WebSocketServer
   end
 
   def send_handshake_response(socket, ws_accept)
-    socket << "HTTP/1.1 101 Switching Protocols\r\n"
-              "Upgrade: websocket\r\n"
-              "Connection: Upgrade\r\n"
+    socket << "HTTP/1.1 101 Switching Protocols\r\n" +
+              "Upgrade: websocket\r\n" +
+              "Connection: Upgrade\r\n" +
               "Sec-WebSocket-Accept: #{ws_accept}\r\n"
   end
 
 end
-
-server = WebSocketServer.new()

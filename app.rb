@@ -1,12 +1,15 @@
 #!/usr/bin/env ruby
 
 require_relative 'websocket_server'
-require_relative 'websocket_connection'
 
-server = WebSocketServer.new({path: '/', host: 'localhost', port: 4568})
+server = WebSocketServer.new # use defaults
 
 loop do
   Thread.new(server.accept) do |connection|
     puts "Connected"
+    while (message = connection.recv)
+      puts "Received #{message} from the client"
+      connection.send("Received #{message}. Thanks!")
+    end
   end
 end
